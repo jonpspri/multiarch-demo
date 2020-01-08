@@ -1,0 +1,46 @@
+---
+- name:  Add the 'jenkins_slave' user and give it docker access
+  user:
+    name: jenkins_slave
+    state: present
+    groups: docker
+  become: yes
+
+- name:  Add the SSH key to allow Docker access to the ID
+  authorized_key:
+    user: jenkins_slave
+    state: present
+    key: "{{ lookup('file', ssh_public_key_file) }}"
+  become: yes
+  become_user: jenkins_slave
+
+- name:  Add build tools
+  apt:
+    name:
+    - make
+    - python3-pip
+    state: present
+    install_recommends: no
+  become: yes
+
+- name: Pip install the docker module
+  pip:
+    name: docker
+    state: present
+  become: yes
+
+- name:  Add Docker login to jenkins ID
+  docker_login:
+    registry: "{{ docker_registry }}"
+    username: "{{ docker_username }}"
+    password: "{{ docker_password }}"
+  become: yes
+  become_user: jenkins_slave
+
+- name:  Enable experimental features in the CLI (login created the file)
+  shell: |
+    set -eu
+    jq '. + { "experimental": "enabled" }' ~/.docker/config.json > ~/.docker/config.new
+    mv ~/.docker/config.new ~/.docker/config.json
+  become: yes
+  become_user: jenkins_slave

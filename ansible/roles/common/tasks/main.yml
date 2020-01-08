@@ -1,0 +1,68 @@
+---
+  - name: Stat the various motd files in support of trimming
+    stat:
+      path: /etc/update-motd.d/{{ item }}
+    register: motd_stat
+    loop:
+      - 10-help-text
+      - 50-motd-news
+      - 80-livepatch
+
+  - name: Trim down the motd (PLEASE!)  Thanks ubuntu.
+    file:
+      path: /etc/update-motd.d/{{ item.item }}
+      mode: '0644'
+      state: file
+    become: yes
+    when: item.stat.exists
+    loop: "{{ motd_stat.results }}"
+    loop_control:
+      label: "{{ item.item }}"
+
+  #  Test to see if we can predict when we're going to have a problem updating
+  #  the grub boot file.
+  - name: Check if /boot/grub/menu.lst exists
+    stat:
+      path: /boot/grub/menu.lst
+    register: stat_menu_lst
+
+  - name: Update /boot/grub/menu.lst so apt upgrades run properly
+    lineinfile:
+      path: /boot/grub/menu.lst
+      state: present
+      regexp: "^(# *)?groot="
+      line: groot=(hd0)
+    when:
+      - ansible_cmdline.root is regex("^LABEL=")
+      - stat_menu_lst.stat.exists
+    become: yes
+
+  - name: Apply any security upgrades, etc
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+      upgrade: safe
+    become: yes
+
+  - name:  Install Java JDK 8
+    apt:
+      name:
+        - openjdk-8-jdk-headless
+        - sudo
+      state: present
+      install_recommends: no
+    become: yes
+
+  - name:  Create demo user
+    user:
+      name: demo
+      state: present
+    become: yes
+
+  - name:  Add the current SSH key as authorized for demo user
+    authorized_key:
+      user: demo
+      state: present
+      key: "{{ lookup('file', ssh_public_key_file) }}"
+    become: yes
+    become_user: demo

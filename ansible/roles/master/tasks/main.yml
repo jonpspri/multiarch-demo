@@ -1,0 +1,33 @@
+---
+- name: Add apt signing key for Jenkins repository
+  apt_key:
+    id: 150FDE3F7787E7D11EF4E12A9B7D32F2D50582E6
+    url: https://pkg.jenkins.io/debian/jenkins.io.key
+    state: present
+  become: yes
+
+- name: Add Jenkins apt repository to sources
+  apt_repository:
+    repo: deb https://pkg.jenkins.io/debian-stable binary/
+    state: present
+    filename: jenkins
+  become: yes
+
+- name: Install Jenkins package
+  apt:
+    update_cache: yes
+    name: jenkins
+    state: latest
+    install_recommends: no
+  become: yes
+
+#
+# TODO:
+#
+# Figure out how to automate initial configuration of Jenkins.
+#
+# Eventually use the Jenkins API to establish a credential and to add the
+# slave nodes.  Unfortunately that API is ridiculously poorly documented.
+#
+# For now, this is where I take a break to configure some things
+#

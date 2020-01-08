@@ -1,0 +1,7 @@
+---
+- hosts: slaves
+  any_errors_fatal: true
+  roles:
+    - common
+    - docker
+    - slave

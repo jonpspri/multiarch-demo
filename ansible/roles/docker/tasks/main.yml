@@ -1,0 +1,59 @@
+---
+
+- name: Add apt signing key for Docker repository
+  apt_key:
+    id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  become: yes
+
+- name: Add Docker apt repository to sources
+  apt_repository:
+    repo: 'deb [arch={{ repository_arch[ansible_machine] }}]
+        https://download.docker.com/linux/ubuntu
+        {{ ansible_distribution_release }} stable'
+    state: present
+    filename: docker
+  become: yes
+
+- name: Install Docker packages
+  apt:
+    update_cache: yes
+    name:
+    - docker-ce
+    - jq
+    state: present
+    install_recommends: no
+  become: yes
+
+- name: Test for docker-ce and containerd.io packages
+  shell: apt-cache show {{ item }}
+  register: new_docker
+  loop:
+    - docker-ce-cli
+    - containerd.io
+  failed_when: (new_docker.rc != 0) and (new_docker.rc != 100)
+
+- name: Install Docker CLI and Containerd packages
+  apt:
+    name: "{{ item.item }}"
+    state: present
+    install_recommends: no
+  when: item.rc == 0
+  become: yes
+  loop: "{{ new_docker.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Restart Docker service
+  service:
+    name: docker
+    state: restarted
+  become: yes
+
+- name:  Add the 'docker' group to the 'demo' user
+  user:
+    name: demo
+    state: present
+    groups: docker
+  become: yes
