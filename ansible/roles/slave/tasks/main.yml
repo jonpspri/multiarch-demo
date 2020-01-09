@@ -29,11 +29,17 @@
     state: present
   become: yes
 
+- name:  Import Docker Logins
+  include_vars: docker_logins.yml
+
 - name:  Add Docker login to jenkins ID
   docker_login:
-    registry: "{{ docker_registry }}"
-    username: "{{ docker_username }}"
-    password: "{{ docker_password }}"
+    registry: "{{ item.registry }}"
+    username: "{{ item.username }}"
+    password: "{{ item.password }}"
+  loop: "{{ docker_logins }}"
+  loop_control:
+    label: "{{ item.registry }}"
   become: yes
   become_user: jenkins_slave
 

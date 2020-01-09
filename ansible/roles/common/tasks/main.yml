@@ -44,13 +44,20 @@
       upgrade: safe
     become: yes
 
-  - name:  Install Java JDK 8
+  - name:  Install Java 8 JDK
     apt:
       name:
         - openjdk-8-jdk-headless
-        - sudo
       state: present
       install_recommends: no
+    become: yes
+
+  - name:  Install sudo
+    apt:
+      name: sudo
+      state: present
+      install_recommends: no
+      dpkg_options: force-confnew
     become: yes
 
   - name:  Create demo user
