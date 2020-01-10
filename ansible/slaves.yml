@@ -3,5 +3,6 @@
   any_errors_fatal: true
   roles:
     - common
+    - swapfile
     - docker
     - slave

@@ -2,4 +2,5 @@
 - hosts: masters
   roles:
     - common
+    - swapfile
     - master
