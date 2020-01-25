@@ -1,4 +1,9 @@
 ---
+#
+#  Create Jenkins build slave nodes.  This playbook does not actually
+#  configure Jenkins with the nodes, but at the end, that configuration
+#  should be fairly straightforward -- add the node; retrieve the host key.
+#
 - hosts: slaves
   any_errors_fatal: true
   roles:

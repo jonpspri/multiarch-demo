@@ -1,2 +1,6 @@
 ---
+#
+#  This lookup allows for easy conversion from 'uname -m' architectures to
+#  Docker architectures.
+#
 repository_arch: { "x86_64": "amd64", "aarch64": "arm64" ,"ppc64le": "ppc64el", "s390x": "s390x" }

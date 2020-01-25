@@ -17,6 +17,7 @@
 - name:  Add build tools
   apt:
     name:
+    - git
     - make
     - python3-pip
     state: present

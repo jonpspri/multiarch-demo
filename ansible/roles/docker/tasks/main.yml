@@ -1,5 +1,8 @@
 ---
-
+#
+#  Add the Docker Ubuntu repository to the system, update the caches, and
+#  install docker.
+#
 - name: Add apt signing key for Docker repository
   apt_key:
     id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
@@ -26,7 +29,11 @@
     install_recommends: no
   become: yes
 
-- name: Test for docker-ce and containerd.io packages
+#
+#  Some packages have not been broken out on some architectures, so we will
+#  test the cache list to determine whether they exist.
+#
+- name: Test for docker-ce-cli and containerd.io packages
   shell: apt-cache show {{ item }}
   register: new_docker
   loop:
@@ -34,6 +41,10 @@
     - containerd.io
   failed_when: (new_docker.rc != 0) and (new_docker.rc != 100)
 
+#
+#  Use the results of the prior step to request or confirm install of CLI and
+#  containerd.io.
+#
 - name: Install Docker CLI and Containerd packages
   apt:
     name: "{{ item.item }}"

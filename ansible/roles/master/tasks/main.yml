@@ -1,4 +1,9 @@
 ---
+#
+#  Usint the Jenkins-provided apt repository to retreive and start the Jenkins
+#  service.  There's a lot more that could be done here, but for the moment
+#  I'll leave it at this until I have an excuse to continue.
+#
 - name: Add apt signing key for Jenkins repository
   apt_key:
     id: 150FDE3F7787E7D11EF4E12A9B7D32F2D50582E6
@@ -13,10 +18,12 @@
     filename: jenkins
   become: yes
 
-- name: Install Jenkins package
+- name: Install Jenkins package (and we may as well get Apache)
   apt:
     update_cache: yes
-    name: jenkins
+    name:
+      - apache2
+      - jenkins
     state: latest
     install_recommends: no
   become: yes

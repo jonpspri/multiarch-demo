@@ -1,5 +1,8 @@
 ---
-  - name: Stat the various motd files in support of trimming
+#
+#  General OS configuration items that are need by both Master and Slave nodes
+#
+  - name: Stat the MOTD files we want to disable to make logins less verbose.
     stat:
       path: /etc/update-motd.d/{{ item }}
     register: motd_stat
@@ -8,7 +11,7 @@
       - 50-motd-news
       - 80-livepatch
 
-  - name: Trim down the motd (PLEASE!)  Thanks ubuntu.
+  - name: Make some MOTD files not executable to make logins less verbose.
     file:
       path: /etc/update-motd.d/{{ item.item }}
       mode: '0644'
@@ -44,15 +47,16 @@
       upgrade: safe
     become: yes
 
-  - name:  Install Java 8 JDK
+  - name:  Install Java 8 JDK and Python Setup Tools
     apt:
       name:
         - openjdk-8-jdk-headless
+        - python-setuptools
       state: present
       install_recommends: no
     become: yes
 
-  - name:  Install sudo
+  - name:  Install sudo, and force overwrite of the existing config file.
     apt:
       name: sudo
       state: present
@@ -60,13 +64,13 @@
       dpkg_options: force-confnew
     become: yes
 
-  - name:  Create demo user
+  - name:  Create demo user for low-privilege login.
     user:
       name: demo
       state: present
     become: yes
 
-  - name:  Add the current SSH key as authorized for demo user
+  - name:  Add the provided SSH public key as authorized for demo user
     authorized_key:
       user: demo
       state: present

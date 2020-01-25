@@ -1,0 +1,8 @@
+---
+docker_logins:
+- registry: docker.io
+  username: <username>
+  password: <password>
+- registry: us.icr.io
+  username: <username>
+  password: <password>

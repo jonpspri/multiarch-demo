@@ -1,0 +1,51 @@
+#
+#  Edit this file to reflect the appropriate SSH certificates and hosts.  It
+#  almost certainly will not work as currently set up.
+#
+#  You'll also need to configure 'roles/slave/vars/docker_logins.yml' (see the
+#  corresponding docker_logins.example.yml file).
+#
+#  TODO:  Move docker logins configuration to this file or to a neighboring
+#         vars file rather than burying it.  Maybe this file should be YAML?
+#
+
+[all:vars]
+#
+#  Do the needful to get ansible to work.  This should work with most modern
+#  cloud providers on an Ubuntu image.  The private key should be configured
+#  for administrator login by your cloud provider.  Most cloud providers have
+#  that initial login for root (despite Ubuntu policy.  Sigh.)  See the note
+#  about setting 'ansible_user' for individual images below.
+#
+ansible_python_interpreter=/usr/bin/python3
+ansible_ssh_private_key_file=~/.ssh/openwhisk-key.pem
+ansible_user=root
+
+#
+#  This is the PUBLIC key for the key Jenkins will use to log in as
+#  'jenkins_slave' on the slave instances.
+#
+ssh_public_key_file="~/.ssh/openwhisk-key.pub"
+
+#
+#  This is where the master node(s) is set up.
+#
+#  TODO:  More Jenkins configuration should be automatic on this node than
+#         currently is.  Also, SSL configuration (including LetsEncrypt)
+#         could be automated.
+#
+[masters]
+jenkins-master.example.com
+
+#
+#  These nodes are to be configured as slaves (see slaves.yml).
+#  Note that for nodes where you do not have direct access, you
+#  can set an 'ansible_user' to an ID that can elevate privileges.
+#
+[slaves]
+x86-64-a.example.com
+x86-64-b.example.com
+ppc64le.example.com  ansible_user=ubuntu
+s390x.example.com    ansible_user=ubuntu
+aarch64-a.example.com
+aarch64-big.example.com

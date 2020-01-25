@@ -1,4 +1,16 @@
 ---
+#
+#  Create a master Jenkins server.  For the moment, this consists of installing
+#  and starting the Jenkins package.
+#
+#  TODO:  Install apache WebServer, create a virtual host for the domain,
+#         work with LetsEncrypt to get a certificate for SSL, and as a
+#         result create an SSL proxy for the server.  Adjust the firewall
+#         settings appropriately.
+#
+#         Finally, optionally provide a client certificate to provide an
+#         extra level of security around the service.
+#
 - hosts: masters
   roles:
     - common
