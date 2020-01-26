@@ -1,0 +1,28 @@
+---
+#
+#  If there is not a proper bazel binary, install it from the builder image
+#
+- name: Get /usr/local/bin/bazel information
+  stat:
+    path: /usr/local/bin/bazel
+  register: bazel_stat
+
+- name: Install bazel if it does not exist
+  docker_container:
+    name: bazel-bootstrap-builder
+    image: "s390xopenwhisk/bazel-bootstrap-builder:2.0.0"
+    state: started
+    volumes: "/usr/local/bin:/target"
+    command: "cp /bazel /target/bazel"
+    detach: no
+    cleanup: yes
+  become: true
+  when: not bazel_stat.stat.exists
+
+- name: Re-stat bazel
+  stat:
+      path: /usr/local/bin/bazel
+  register: bazel_debug_stat
+
+- debug:
+    var: bazel_debug_stat
