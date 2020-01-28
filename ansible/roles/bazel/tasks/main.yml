@@ -19,10 +19,11 @@
   become: true
   when: not bazel_stat.stat.exists
 
-- name: Re-stat bazel
-  stat:
-      path: /usr/local/bin/bazel
-  register: bazel_debug_stat
-
-- debug:
-    var: bazel_debug_stat
+- name: Install compiler
+  apt:
+      name:
+      - gcc
+      - libc6-dev
+      state: present
+      install_recommends: no
+  become: yes
