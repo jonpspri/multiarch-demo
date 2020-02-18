@@ -7,8 +7,9 @@
 - hosts: slaves
   any_errors_fatal: true
   roles:
-    - common
-    - swapfile
-    - docker
-    - slave
-    - bazel
+    - role: common
+    - role: swapfile
+    - role: docker
+    - role: slave
+    - role: bazel
+      when: ansible_architecture == "x86_64"

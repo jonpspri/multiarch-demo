@@ -1,29 +1,21 @@
----
-#
-#  If there is not a proper bazel binary, install it from the builder image
-#
-- name: Get /usr/local/bin/bazel information
-  stat:
-    path: /usr/local/bin/bazel
-  register: bazel_stat
+- name: Add apt signing key for Bazel repository
+  apt_key:
+    id: 3D5919B448457EE0
+    url: https://bazel.build/bazel-release.pub.gpg
+    state: present
+  become: yes
 
-- name: Install bazel if it does not exist
-  docker_container:
-    name: bazel-bootstrap-builder
-    image: "s390xopenwhisk/bazel-bootstrap-builder:2.0.0"
-    state: started
-    volumes: "/usr/local/bin:/target"
-    command: "cp /bazel /target/bazel"
-    detach: no
-    cleanup: yes
-  become: true
-  when: not bazel_stat.stat.exists
+- name: Add Bazel apt repository to sources
+  apt_repository:
+    repo: 'deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8'
+    state: present
+    filename: bazel
+  become: yes
 
-- name: Install compiler
+- name: Install Bazel packages
   apt:
-      name:
-      - gcc
-      - libc6-dev
-      state: present
-      install_recommends: no
+    update_cache: yes
+    name: bazel
+    state: present
+    install_recommends: no
   become: yes
