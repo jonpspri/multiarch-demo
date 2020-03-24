@@ -15,20 +15,11 @@ while true; do
 done
 
 hostpath="$(dirname "$(realpath $0)")/../ansible"
-{
-    while IFS= read -r line; do
-        [ "$line" == '[slaves]' ] && break
-    done
-    #shellcheck disable=SC2034
-    for i in $(seq 1 4); do
-        IFS=' ' read machine assignments
-        [ "$privileged" == 'no' ] && { echo $machine demo; continue; }
-        username=root
-        for assignment in $assignments; do
-          variable=${assignment%%=*}
-          setting=${assignment#*=}
-          [ "$variable" == 'ansible_user' ] && username="$setting"
-        done
-        echo $machine $username
-    done
-} < "$hostpath/hosts"
+yq -r '.slaves.hosts | to_entries | .[] | [ .key, .value?.ansible_user // "root" ] | join(" ")' "$hostpath/hosts.yml" \
+| for i in $(seq 1 4); do
+    IFS=' ' read machine privileged_user
+    [ "$privileged" == 'no' ] && { echo $machine demo; continue; }
+    # username=root
+    echo $machine $privileged_user
+done
+echo

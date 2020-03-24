@@ -15,6 +15,11 @@
     read -r machine4 user4
 } <<< "$("$(dirname "$0")"/echo-4slaves.sh "$@")"
 
+echo machine1 user1
+echo machine2 user2
+echo machine3 user3
+echo machine4 user4
+
 tmux new-session ssh -i ~/.ssh/openwhisk-key.pem $user1@$machine1 \; \
  split-window -h ssh -i ~/.ssh/openwhisk-key.pem $user2@$machine2 \; \
  split-window -t "%0" -v ssh -i ~/.ssh/openwhisk-key.pem $user3@$machine3 \; \
