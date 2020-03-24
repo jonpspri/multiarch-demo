@@ -1,0 +1,66 @@
+#
+#  Edit this file to reflect the appropriate SSH certificates and hosts.  It
+#  almost certainly will not work as currently set up.
+#
+
+#
+#  Do the needful to get ansible to work.  This should work with most modern
+#  cloud providers on an Ubuntu image.  The private key should be configured
+#  for administrator login by your cloud provider.  Most cloud providers have
+#  that initial login for root (despite Ubuntu policy.  Sigh.)  See the note
+#  about setting 'ansible_user' for individual images below.
+#
+all:
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_private_key_file: ~/.ssh/openwhisk-key.pem
+    ansible_user: root
+
+    #
+    #  This is the PUBLIC key for the key Jenkins will use to log in as
+    #  'jenkins_slave' on the slave instances.
+    #
+    #  TODO:  Better name for this file?  Also, maybe it should be a
+    #         variable only under masters.  But that's for another commit.
+    #
+    ssh_public_key_file: "~/.ssh/openwhisk-key.pub"
+
+#
+#  This is where the master node(s) is set up.
+#
+#  TODO:  More Jenkins configuration should be automatic on this node than
+#         currently is.  Also, SSL configuration (including LetsEncrypt)
+#         could be automated.
+#
+masters:
+  hosts:
+    jenkins-master.example.com:
+
+#
+#  These nodes are to be configured as slaves (see slaves.yml).
+#  Note that for nodes where you do not have direct access, you
+#  can set an 'ansible_user' to an ID that can elevate privileges.
+#
+slaves:
+  hosts:
+    x86-64-a.example.com:
+    x86-64-b.example.com:
+    ppc64le.example.com:
+      ansible_user: ubuntu
+    s390x.example.com:
+      ansible_user: ubuntu
+    aarch64-a.example.com:
+    aarch64-big.example.com:
+
+  #
+  #  The slaves need to be able to log in to one or more docker
+  #  registries to upload images.
+  #
+  vars:
+    docker_logins:
+    - registry: https://index.docker.io/v1/
+      username: username_here
+      password: plaintext_password_here
+    - registry: us.icr.io
+      username: iamapikey
+      password: plaintext_iam_api_key_here

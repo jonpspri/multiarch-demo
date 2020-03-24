@@ -1,8 +1,0 @@
----
-docker_logins:
-- registry: https://index.docker.io/v1/
-  username: <username>
-  password: <password>
-- registry: us.icr.io
-  username: <username>
-  password: <password>

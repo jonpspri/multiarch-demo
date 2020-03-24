@@ -30,8 +30,8 @@
     state: present
   become: yes
 
-- name:  Import Docker Logins
-  include_vars: docker_logins.yml
+# - name:  Import Docker Logins
+#   include_vars: docker_logins.yml
 
 - name:  Add Docker login to jenkins ID
   docker_login:

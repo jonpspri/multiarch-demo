@@ -1,3 +1,2 @@
-virtual-env
 ansible/hosts
-docker_logins.yml
+ansible/hosts.yml
