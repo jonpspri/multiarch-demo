@@ -20,6 +20,8 @@
     - git
     - make
     - python3-pip
+    - openjdk-8-jdk-headless
+    - python-setuptools
     state: present
     install_recommends: no
   become: yes

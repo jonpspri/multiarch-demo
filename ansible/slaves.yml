@@ -10,6 +10,7 @@
     - role: common
     - role: swapfile
     - role: docker
+    - role: docker-tls
     - role: slave
     - role: bazel
       when: ansible_architecture == "x86_64"

@@ -47,15 +47,6 @@
       upgrade: safe
     become: yes
 
-  - name:  Install Java 8 JDK and Python Setup Tools
-    apt:
-      name:
-        - openjdk-8-jdk-headless
-        - python-setuptools
-      state: present
-      install_recommends: no
-    become: yes
-
   - name:  Install sudo, and force overwrite of the existing config file.
     apt:
       name: sudo

@@ -1,0 +1,112 @@
+---
+
+- name: "Create Server Private Key"
+  local_action:
+    module: openssl_privatekey
+    path: "{{ docker_tls_root }}/{{ inventory_hostname }}.pem"
+
+- name: "Create Certificate Signing Request"
+  local_action:
+    module: openssl_csr
+    path: "{{ docker_tls_root }}/{{ inventory_hostname }}.csr"
+    common_name: "{{ ansible_host }}"
+    privatekey_path: "{{ docker_tls_root }}/{{ inventory_hostname }}.pem"
+    subject_alt_name: "DNS:{{ inventory_hostname }},IP:{{ ansible_default_ipv4.address }},IP:127.0.0.1"
+    extended_key_usage: serverAuth
+
+- name: "Sign the server certificate"
+  local_action:
+    module: openssl_certificate
+    path: "{{ docker_tls_root }}/{{ inventory_hostname }}.crt"
+    csr_path: "{{ docker_tls_root }}/{{ inventory_hostname }}.csr"
+    ownca_path: "{{ ownca_path }}"
+    ownca_privatekey_path: "{{ ownca_privatekey_path }}"
+    ownca_privatekey_passphrase: "{{ ownca_privatekey_passphrase }}"
+    provider: ownca
+
+- name: "Create /etc/docker/tls and /etc/docker/backup folders"
+  file:
+    state: directory
+    path: "/etc/docker/{{ item }}"
+  become: true
+  with_items: [ "backup", "tls" ]
+
+- name: "Copy TLS items to Server"
+  copy:
+    src: "{{ item.src }}"
+    dest: "/etc/docker/tls/{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  become: true
+  with_items:
+  - src: "{{ ownca_path }}"
+    dest: "ca.crt"
+    mode: "0644"
+  - src: "{{ docker_tls_root }}/{{ inventory_hostname }}.crt"
+    dest: "server.crt"
+    mode: "0644"
+  - src: "{{ docker_tls_root }}/{{ inventory_hostname }}.pem"
+    dest: "server.pem"
+    mode: "0600"
+
+- name: "Seed daemon.json if it's not there"
+  copy:
+    dest: /etc/docker/daemon.json
+    content: "{ }"
+    force: no
+  become: true
+
+- name: "Backup date extension for daemon.json will be..."
+  debug: var=ansible_date_time.iso8601_basic_short
+
+- name: "Backup the daemon.json file"
+  copy:
+    dest: /etc/docker/backup/daemon.json.bak-{{ ansible_date_time.iso8601_basic_short }}
+    src: /etc/docker/daemon.json
+    remote_src: yes
+  become: true
+
+- name: "Time for an ugly jq to edit daemon.json"
+  shell:
+    chdir: /etc/docker
+    cmd: |
+      jq -r '. | del(.host) | . * {
+        tlsverify: true,
+        tlscacert: "/etc/docker/tls/ca.crt",
+        tlscert: "/etc/docker/tls/server.crt",
+        tlskey: "/etc/docker/tls/server.pem",
+        hosts: ["fd://","tcp://0.0.0.0:2376"]
+      } ' \
+      backup/daemon.json.bak-{{ ansible_date_time.iso8601_basic_short }} \
+      > daemon.json
+  become: true
+
+- name: "Copy the docker unit definition to /etc/systemd/system if necessary"
+  copy:
+    dest: /etc/systemd/system/docker.service
+    src: /lib/systemd/system/docker.service
+    remote_src: yes
+    force: no
+  become: true
+
+- name: "Edit the docker unit definition to use the config file"
+  replace:
+    path: /etc/systemd/system/docker.service
+    regexp: '^(ExecStart=.*\s)-H fd://(\s.*)$'
+    replace: '\1\2'
+    backup: yes
+  become: true
+
+- name: "Update symlink in /etc/systemd/system/multi-user.target.wants"
+  file:
+    path: /etc/systemd/system/multi-user.target.wants/docker.service
+    state: link
+    src: /etc/systemd/system/docker.service
+    force: yes
+  become: true
+
+- name: Restart Docker service
+  systemd:
+    daemon_reload: yes
+    name: docker
+    state: restarted
+  become: true

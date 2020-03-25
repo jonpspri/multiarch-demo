@@ -15,11 +15,14 @@ while true; do
 done
 
 hostpath="$(dirname "$(realpath $0)")/../ansible"
-yq -r '.slaves.hosts | to_entries | .[] | [ .key, .value?.ansible_user // "root" ] | join(" ")' "$hostpath/hosts.yml" \
-| for i in $(seq 1 4); do
+#shellcheck disable=SC2034
+yq -r '
+    .slaves.hosts | to_entries | .[] |
+    [ .key, .value?.ansible_user // "root" ] | join(" ")
+  ' "$hostpath/hosts.yml" | \
+for i in $(seq 1 4); do
     IFS=' ' read machine privileged_user
     [ "$privileged" == 'no' ] && { echo $machine demo; continue; }
     # username=root
     echo $machine $privileged_user
 done
-echo

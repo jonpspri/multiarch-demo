@@ -1,0 +1,14 @@
+---
+#
+#  Create docker nodes capable of accepting a login via TLS.  This playbook
+#  can be run on a set of nodes indepentant of (but potentially overlapping)
+#  the Jenkins nodes.  It is intended to create a set of nodes for reviewing
+#  the use of 'docker context' and 'docker buildx' to perform multi-architecture
+#  builds.
+#
+- hosts: docker_tls
+  any_errors_fatal: true
+  roles:
+    - role: common
+    - role: docker
+    - role: docker-tls

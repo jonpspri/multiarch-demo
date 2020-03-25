@@ -64,3 +64,4 @@ slaves:
     - registry: us.icr.io
       username: iamapikey
       password: plaintext_iam_api_key_here
+    tls_passpharse: plaintext_tls_passphrase
