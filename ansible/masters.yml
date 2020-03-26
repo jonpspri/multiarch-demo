@@ -9,7 +9,8 @@
 #         settings appropriately.
 #
 #         Finally, optionally provide a client certificate to provide an
-#         extra level of security around the service.
+#         extra level of security around the service.  (Should this CA be
+#         shared with docker TLS?)
 #
 - hosts: masters
   roles:

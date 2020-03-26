@@ -64,4 +64,30 @@ slaves:
     - registry: us.icr.io
       username: iamapikey
       password: plaintext_iam_api_key_here
-    tls_passpharse: plaintext_tls_passphrase
+
+docker_tls:
+  hosts: 
+    x86-64-a.example.com:
+    x86-64-b.example.com:
+    ppc64le.example.com:
+      ansible_user: ubuntu
+    s390x.example.com:
+      ansible_user: ubuntu
+    aarch64-a.example.com:
+    aarch64-big.example.com:
+  vars:
+    #
+    #  Information about the CA to be used to create server certificates.  It
+    #  is exepected you will use the same CA to create client certificates
+    #  for connection to the docker engines.
+    #
+    ownca_path: /Users/username/.docker/tls/ca.pem
+    ownca_privatekey_path: /Users/username/.docker/tls/ca-key.pem
+    ownca_privatekey_passphrase: "plaintext_passphrase_here"
+
+    #
+    #  This will be used as a working/archive directory to store the
+    #  server certificates.  I like to keep everything in one place,
+    #  but you could you a temporary/scratch directory if you prefer
+    #
+    docker_tls_root: /Users/username/.docker/tls
