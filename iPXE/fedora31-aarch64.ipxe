@@ -1,0 +1,13 @@
+#!ipxe
+
+# Set source URI
+set mirror http://download.fedoraproject.org/pub/fedora/linux/releases/31
+
+# Detect CPU architecture and calculate repository URI
+set arch aarch64
+set repo ${mirror}/Server/${arch}/os
+
+# Start installer
+kernel https://raw.githubusercontent.com/jonpspri/multiarch-demo/master/iPXE/fedora31-aarch64-vmlinux initrd=initrd.img repo=${repo}
+initrd ${repo}/images/pxeboot/initrd.img
+boot
