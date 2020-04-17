@@ -8,6 +8,6 @@ set arch aarch64
 set repo ${mirror}/Server/${arch}/os
 
 # Start installer
-kernel https://raw.githubusercontent.com/jonpspri/multiarch-demo/master/iPXE/fedora31-aarch64-vmlinux initrd=initrd.img repo=${repo}
+kernel https://raw.githubusercontent.com/jonpspri/multiarch-demo/master/iPXE/fedora31-aarch64-vmlinux console=ttyAMA0,115200 initrd=initrd.img ip=dhcp inst.vnc repo=${repo}
 initrd ${repo}/images/pxeboot/initrd.img
 boot
