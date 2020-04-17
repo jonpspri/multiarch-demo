@@ -18,14 +18,10 @@
     filename: jenkins
   become: yes
 
-- name: Install Jenkins package (and we may as well get Apache, Java, Python)
+- name: Install Jenkins package
   apt:
     update_cache: yes
-    name:
-      - apache2
-      - jenkins
-      - openjdk-8-jdk-headless
-      - python-setuptools
+    name: jenkins
     state: latest
     install_recommends: no
   become: yes

@@ -1,0 +1,21 @@
+---
+#
+#  Add the PodMan repository to the system, update the caches, and
+#  install podman and buildah
+#
+
+- name: Add Podman apt repository to the sources (Ubuntu)
+  apt_repository:
+    repo: ppa:projectatomic/ppa
+  become: yes
+
+- name: Install podman and buildah (Ubuntu)
+  apt:
+    update_cache: yes
+    name:
+    - podman
+    - buildah
+    - slirp4netns
+    state: present
+    install_recommends: no
+  become: yes

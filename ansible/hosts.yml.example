@@ -24,6 +24,21 @@ all:
     #         variable only under masters.  But that's for another commit.
     #
     ssh_public_key_file: "~/.ssh/openwhisk-key.pub"
+    #
+    #  The slaves need to be able to log in to one or more docker
+    #  registries to upload images.
+    #
+    docker_logins:
+    - registry: docker.io
+      username: username_here
+      password: plaintext_password_here
+    - registry: https://index.docker.io/v1/
+      username: username_here
+      password: plaintext_password_here
+    - registry: us.icr.io
+      username: iamapikey
+      password: plaintext_iam_api_key_here
+
 
 #
 #  This is where the master node(s) is set up.
@@ -37,12 +52,29 @@ masters:
     jenkins-master.example.com:
 
 #
+#  Demo servers
+#
+#  The first four hosts from this list will be used by the
+#  bin/4panes.sh script to demonstrate multi-architecture in tmux panes.
+#  'ansible_user' will be used if a privileged user is requested with
+#  'bin/4panes.sh -p'.
+#
+demo_servers:
+  hosts:
+    x86-64-a.example.com:
+    x86-64-b.example.com:
+    ppc64le.example.com:
+      ansible_user: ubuntu
+    s390x.example.com:
+      ansible_user: ubuntu
+
+#
 #  These nodes are to be configured as slaves (see slaves.yml).
 #  Note that for nodes where you do not have direct access, you
 #  can set an 'ansible_user' to an ID that can elevate privileges.
 #
-slaves:
-  hosts:
+docker_slaves:
+  hosts: &docker_slaves
     x86-64-a.example.com:
     x86-64-b.example.com:
     ppc64le.example.com:
@@ -51,22 +83,12 @@ slaves:
       ansible_user: ubuntu
     aarch64-a.example.com:
     aarch64-big.example.com:
+podman_slaves:
+  hosts: *docker_slaves
 
-  #
-  #  The slaves need to be able to log in to one or more docker
-  #  registries to upload images.
-  #
-  vars:
-    docker_logins:
-    - registry: https://index.docker.io/v1/
-      username: username_here
-      password: plaintext_password_here
-    - registry: us.icr.io
-      username: iamapikey
-      password: plaintext_iam_api_key_here
 
-docker_tls:
-  hosts: 
+docker_tls_hosts:
+  hosts:
     x86-64-a.example.com:
     x86-64-b.example.com:
     ppc64le.example.com:

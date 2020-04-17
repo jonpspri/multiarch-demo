@@ -6,9 +6,7 @@
 #  the use of 'docker context' and 'docker buildx' to perform multi-architecture
 #  builds.
 #
-- hosts: docker_tls
+- hosts: docker_tls_hosts
   any_errors_fatal: true
   roles:
-    - role: common
-    - role: docker
-    - role: docker-tls
+    - role: docker_tls_host

@@ -17,7 +17,7 @@ done
 hostpath="$(dirname "$(realpath $0)")/../ansible"
 #shellcheck disable=SC2034
 yq -r '
-    .slaves.hosts | to_entries | .[] |
+    .demo_servers.hosts | to_entries | .[] |
     [ .key, .value?.ansible_user // "root" ] | join(" ")
   ' "$hostpath/hosts.yml" | \
 for i in $(seq 1 4); do

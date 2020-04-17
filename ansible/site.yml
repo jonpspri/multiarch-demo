@@ -1,3 +1,5 @@
 ---
 - import_playbook: masters.yml
-- import_playbook: slaves.yml
+- import_playbook: docker_slaves.yml
+- import_playbook: podman_slaves.yml
+- import_playbook: docker_tls_hosts.yml

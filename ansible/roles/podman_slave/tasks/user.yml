@@ -1,0 +1,37 @@
+---
+- name: Create the directories for the config files (if needed)
+  file:
+    path: "$HOME/.config/containers"
+    state: directory
+    mode: '0755'
+  become: yes
+  become_user: "{{ user }}"
+
+- name: (Carefully) Copy the registries.conf to the directory
+  copy:
+    src: "{{ role_path }}/files/registries.conf"
+    dest: "$HOME/.config/containers/registries.conf"
+    mode: "0644"
+    force: no
+  become: yes
+  become_user: "{{ user }}"
+
+#
+#  TODO:  Use jq to edit the config file in place
+#
+- name: Configure passwords for buildah
+  command:
+    argv:
+    - /usr/bin/podman
+    - login
+    - -u
+    - "{{ docker_login.username }}"
+    - -p
+    - "{{ docker_login.password }}"
+    - "{{ docker_login.registry }}"
+  loop: "{{ docker_logins }}"
+  loop_control:
+    label: "{{ docker_login.registry }}"
+    loop_var: docker_login
+  become: yes
+  become_user: "{{ user }}"

@@ -1,0 +1,21 @@
+---
+#
+#  Create demo account for use in multi-architecture demonstrations
+#
+
+- name:  Create unprivileged login {{ user }}
+  user:
+    name: "{{ user }}"
+    state: present
+  become: yes
+
+#
+#  TODO:  Support iterating through a list of keys
+#
+- name:  Add the provided SSH public key as authorized for {{ user }} 
+  authorized_key:
+    user: "{{ user }}"
+    state: present
+    key: "{{ lookup('file', ssh_public_key_file) }}"
+  become: yes
+  become_user: "{{ user }}"

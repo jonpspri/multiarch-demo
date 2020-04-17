@@ -2,69 +2,123 @@
 #
 #  General OS configuration items that are need by both Master and Slave nodes
 #
-  - name: Stat the MOTD files we want to disable to make logins less verbose.
-    stat:
-      path: /etc/update-motd.d/{{ item }}
-    register: motd_stat
-    loop:
-      - 10-help-text
-      - 50-motd-news
-      - 80-livepatch
+- name: Stat the MOTD files we want to disable to make logins less verbose.
+  stat:
+    path: /etc/update-motd.d/{{ item }}
+  register: motd_stat
+  loop:
+    - 10-help-text
+    - 50-motd-news
+    - 80-livepatch
 
-  - name: Make some MOTD files not executable to make logins less verbose.
-    file:
-      path: /etc/update-motd.d/{{ item.item }}
-      mode: '0644'
-      state: file
-    become: yes
-    when: item.stat.exists
-    loop: "{{ motd_stat.results }}"
-    loop_control:
-      label: "{{ item.item }}"
+- name: Make some MOTD files not executable to make logins less verbose.
+  file:
+    path: /etc/update-motd.d/{{ item.item }}
+    mode: '0644'
+    state: file
+  become: yes
+  when: item.stat.exists
+  loop: "{{ motd_stat.results }}"
+  loop_control:
+    label: "{{ item.item }}"
 
-  #  Test to see if we can predict when we're going to have a problem updating
-  #  the grub boot file.
-  - name: Check if /boot/grub/menu.lst exists
-    stat:
-      path: /boot/grub/menu.lst
-    register: stat_menu_lst
+#
+#  Test to see if we can predict when we're going to have a problem updating
+#  the grub boot file.
+#
+- name: Check if /boot/grub/menu.lst exists
+  stat:
+    path: /boot/grub/menu.lst
+  register: stat_menu_lst
 
-  - name: Update /boot/grub/menu.lst so apt upgrades run properly
-    lineinfile:
-      path: /boot/grub/menu.lst
-      state: present
-      regexp: "^(# *)?groot="
-      line: groot=(hd0)
-    when:
-      - ansible_cmdline.root is regex("^LABEL=")
-      - stat_menu_lst.stat.exists
-    become: yes
+- name: Update /boot/grub/menu.lst so apt upgrades run properly
+  lineinfile:
+    path: /boot/grub/menu.lst
+    state: present
+    regexp: "^(# *)?groot="
+    line: groot=(hd0)
+  when:
+    - ansible_distribution == "Ubuntu"
+    - ansible_cmdline.root is regex("^LABEL=")
+    - stat_menu_lst.stat.exists
+  become: yes
 
-  - name: Apply any security upgrades, etc
-    apt:
-      update_cache: yes
-      cache_valid_time: 3600
-      upgrade: safe
-    become: yes
+#
+#  TODO:  Update /etd/default/grub to disable
+#         GRUB_CMDLINE_LINUX_DEFAULT="systemd.unified_cgroup_hierarchy", maybe
+#         by explictly setting it to 0 to avoid future problems.  The challenge
+#         is to deal with all the various ways this could hit.  It may require
+#         a little shell script to address the differnt formats.
+#
+#         This is an extreme case that crops up causing docker and podman
+#         failures, so it may not be worth the time to fix now.  However,
+#         I suspect it'll crop up more and more.  Hence this comment.
+#
 
-  - name:  Install sudo, and force overwrite of the existing config file.
-    apt:
-      name: sudo
-      state: present
-      install_recommends: no
-      dpkg_options: force-confnew
-    become: yes
+- name: Apply any security upgrades, etc (Ubuntu)
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+    upgrade: safe
+  become: yes
+  when: ansible_distribution == "Ubuntu"
 
-  - name:  Create demo user for low-privilege login.
-    user:
-      name: demo
-      state: present
-    become: yes
+- name: Apply any security upgrades, etc (Fedora)
+  dnf:
+    name: "*"
+    state: latest
+  become: yes
+  when: ansible_distribution == "Fedora"
+  
+#
+#  TODO:  Do a controlled reboot if any changes have been made to the GRUB
+#         configuration has changed or the apr upgrade means a reboot is
+#         required (look for /var/run/reboot-required for the latter.)
+#
 
-  - name:  Add the provided SSH public key as authorized for demo user
-    authorized_key:
-      user: demo
-      state: present
-      key: "{{ lookup('file', ssh_public_key_file) }}"
-    become: yes
-    become_user: demo
+- name:  Install sudo, and force overwrite of the existing config file.
+  apt:
+    name: sudo
+    state: present
+    install_recommends: no
+    dpkg_options: force-confnew
+  become: yes
+  when: ansible_distribution == "Ubuntu"
+
+#
+#  Some cloud providers do not provide an adequate swapfile allocation when
+#  they create an instance.  This set of processes allocates a swapfile if
+#  needed and ensures
+#
+- name: Create a Swap File
+  shell:
+    cmd: |
+      set -e
+      [ -f /swapfile ] && exit 1
+      fallocate -l 2g /swapfile
+      mkswap /swapfile
+  become: yes
+  register: sh1
+  failed_when: sh1.rc > 1
+  changed_when: sh1.rc == 0
+
+- name: Activate the Swap File
+  shell:
+    executable: /bin/bash
+    cmd: |
+      set -euo pipefail
+      grep '^/swapfile$' <(swapon --noheadings --show=name) && exit 1
+      swapon /swapfile
+  become: yes
+  register: sh2
+  failed_when: sh2.rc > 1
+  changed_when: sh2.rc == 0
+
+- name: Add the swapfile line to the fstab table for restarts
+  lineinfile:
+    #  Don't bork any existing swapfile line
+    #   TODO: I'm not sure the regex is correct :(
+    path: /etc/fstab
+    regex: '^[^#]/swapfile\s.*\sswap\s'
+    line: /swapfile none swap sw 0 0
+  become: yes

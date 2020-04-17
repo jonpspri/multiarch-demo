@@ -1,0 +1,10 @@
+---
+dependencies:
+  - role: common
+  - role: unprivileged_user
+    vars:
+      user: jenkins_slave
+  - role: unprivileged_user
+    vars:
+      user: demo
+  - role: docker_common

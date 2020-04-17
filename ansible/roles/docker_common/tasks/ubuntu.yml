@@ -1,14 +1,9 @@
 ---
-#
-#  Add the Docker Ubuntu repository to the system, update the caches, and
-#  install docker.
-#
 - name: Add apt signing key for Docker repository
   apt_key:
     id: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
     url: https://download.docker.com/linux/ubuntu/gpg
     state: present
-  become: yes
 
 - name: Add Docker apt repository to sources
   apt_repository:
@@ -17,7 +12,6 @@
         {{ ansible_distribution_release }} stable'
     state: present
     filename: docker
-  become: yes
 
 - name: Install Docker packages
   apt:
@@ -27,7 +21,7 @@
     - jq
     state: present
     install_recommends: no
-  become: yes
+  register: docker_install
 
 #
 #  Some packages have not been broken out on some architectures, so we will
@@ -48,24 +42,15 @@
 #
 - name: Install Docker CLI and Containerd packages
   apt:
-    name: "{{ item.item }}"
+    name: '{{ new_docker.results | selectattr("rc","eq","0")
+              | map(attribute="item") | list }}'
     state: present
     install_recommends: no
-  when: item.rc == 0
-  become: yes
-  loop: "{{ new_docker.results }}"
-  loop_control:
-    label: "{{ item.item }}"
+  register: docker_extras_install
 
 - name: Restart Docker service
   service:
     name: docker
     state: restarted
   become: yes
-
-- name:  Add the 'docker' group to the 'demo' user
-  user:
-    name: demo
-    state: present
-    groups: docker
-  become: yes
+  when: docker_install.changed or docker_extras_install.changed

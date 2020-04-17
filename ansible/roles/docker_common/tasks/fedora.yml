@@ -1,0 +1,41 @@
+---
+- name: Ensure all old versions of docker are absent (Fedora)
+  dnf:
+    name:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-selinux
+      - docker-engine-selinux
+      - docker-engine
+    state: absent
+
+- name: Ensure we can add the repository to dnf (Fedora)
+  dnf:
+    name: dnf-plugins-core
+    state: latest
+
+- name: Add Docker repository to dnf
+  shell:
+    cmd: dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+
+- name: Install docker from the Docker repository (Fedora)
+  dnf:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+    state: latest
+    update_cache: yes
+  register: docker_install
+
+- name: Restart Docker service (Fedora)
+  service:
+    name: docker
+    state: restarted
+  become: yes
+  when: docker_install.changed

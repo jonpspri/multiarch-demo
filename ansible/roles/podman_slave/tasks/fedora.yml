@@ -1,0 +1,13 @@
+---
+#
+#  Install podman and buildah
+#
+
+- name: Install podman and buildah (Fedora)
+  dnf:
+    update_cache: yes
+    name:
+      - podman
+      - buildah
+    state: latest
+  become: yes

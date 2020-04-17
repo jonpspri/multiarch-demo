@@ -4,13 +4,7 @@
 #  configure Jenkins with the nodes, but at the end, that configuration
 #  should be fairly straightforward -- add the node; retrieve the host key.
 #
-- hosts: slaves
+- hosts: docker_slaves
   any_errors_fatal: true
   roles:
-    - role: common
-    - role: swapfile
-    - role: docker
-    - role: docker-tls
-    - role: slave
-    - role: bazel
-      when: ansible_architecture == "x86_64"
+    - role: docker_slave

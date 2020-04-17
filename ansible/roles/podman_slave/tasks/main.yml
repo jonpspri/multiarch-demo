@@ -1,0 +1,24 @@
+---
+- name: Install podman and buildah on Ubuntu systems
+  import_tasks: ubuntu.yml
+  when: ansible_distribution == "Ubuntu"
+
+- name: Install podman and buildah on Fedora systems
+  import_tasks: fedora.yml
+  when: ansible_distribution == "Fedora"
+
+- name: "(Carefully) copy registries.conf to /etc/containers/"
+  copy:
+    src: "{{ role_path }}/files/registries.conf"
+    dest: "/etc/containers/registries.conf"
+    mode: "0644"
+    force: no
+  become: yes
+
+- name: Configure available users for podman and buildah
+  include_tasks: user.yml
+  vars:
+    user: "{{ item }}"
+  loop:
+    - demo
+    - jenkins_slave

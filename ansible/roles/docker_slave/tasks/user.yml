@@ -1,0 +1,31 @@
+---
+- name:  Add {{ user }} to the docker group
+  user:
+    name: "{{ user }}"
+    state: present
+    groups: [ "docker" ]
+    append: yes
+  become_user: yes
+
+- name:  Add Docker login to {{ user }}
+  docker_login:
+    registry: "{{ docker_login.registry }}"
+    username: "{{ docker_login.username }}"
+    password: "{{ docker_login.password }}"
+  loop: "{{ docker_logins }}"
+  loop_control:
+    label: "{{ docker_login.registry }}"
+    loop_var: docker_login
+  become: yes
+  become_user: "{{ user }}"
+
+#
+#  TODO:  Perhaps we can use `jq` to test first and skip?  Better idempotence
+#
+- name:  Enable experimental features in the CLI for {{ user }}
+  shell: |
+    set -eu
+    jq '. + { "experimental": "enabled" }' ~/.docker/config.json > ~/.docker/config.new
+    mv ~/.docker/config.new ~/.docker/config.json
+  become: yes
+  become_user: "{{ user }}"
